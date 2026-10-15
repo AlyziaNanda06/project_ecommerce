@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SembakoKu - Belanja Sembako Online</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <a href="#" class="logo">🌿 Sembako<span>Ku</span></a>
+
+    <input type="search" id="searchInput"
+      placeholder="Cari beras, minyak, gula...">
+
+    <button onclick="searchProduct()">Cari</button>
+    <button onclick="showCart()">🛒 Keranjang (<span id="cartCount">0</span>)</button>
+  </header>
+
+  <nav class="menu">
+    <a href="#beranda">Beranda</a>
+    <a href="#kategori">Kategori</a>
+    <a href="#produk">Produk</a>
+    <a href="#promo">Promo</a>
+  </nav>
+
+  <main>
+    <section class="hero" id="beranda">
+      <div>
+        <p class="label">BELANJA KEBUTUHANHARIAN</p>
+        <h1>Belanja Sembako<br><span>Lebih Mudah!</span></h1>
+        <p>Semua kebutuhan dapur dalam satu tempat.
+          Praktis, hemat, dan mudah.</p>
+        <a class="btn" href="#produk">Mulai Belanja →</a>
+      </div>
+      <div class="hero-image">🛒🥬🥚</div>
+    </section>
+
+    <section id="kategori">
+      <h2>Kategori Pilihan</h2>
+      <div class="categories">
+        <button onclick="filterCategory('Beras')">🌾<br>Beras</button>
+        <button onclick="filterCategory('Minyak Goreng')">🫗<br>Minyak</button>
+        <button onclick="filterCategory('Gula')">🍚<br>Gula</button>
+        <button onclick="filterCategory('Telur')">🥚<br>Telur</button>
+        <button onclick="filterCategory('Mi Instan')">🍜<br>Mi Instan</button>
+        <button onclick="filterCategory('Semua')">🛍️<br>Semua</button>
+      </div>
+    </section>
+
+    <section id="produk">
+      <h2>Produk Sembako</h2>
+      <p class="subtitle">Pilih kebutuhan harianmu.</p>
+      <div class="products" id="productList"></div>
+    </section>
+
+    <section id="promo" class="promo">
+      <div>
+        <p>PROMO SPESIAL</p>
+        <h2>Belanja Hemat Setiap Hari!</h2>
+        <p>Temukan kebutuhan dapur dengan harga bersahabat.</p>
+      </div>
+      <div class="promo-icon">🛍️</div>
+    </section>
+
+    <section id="keranjang" class="cart-section">
+      <h2>Keranjang Belanja</h2>
+      <div id="cartItems">Keranjang masih kosong.</div>
+      <h3>Total: <span id="cartTotal">Rp0</span></h3>
+      <button class="btn" onclick="checkout()">Checkout</button>
+    </section>
+  </main>
+
+  <footer>
+    <h3>🌿 SembakoKu</h3>
+    <p>Belanja sembako jadi lebih mudah.</p>
+    <small>© 2026 SembakoKu — Proyek pembelajaran.</small>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
