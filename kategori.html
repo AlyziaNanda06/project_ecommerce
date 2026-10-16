@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kategori Produk - SembakoKu</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <a href="index.html" class="logo">🌿 Sembako<span>Ku</span></a>
+
+    <input type="search" id="searchInput"
+      placeholder="Cari beras, minyak, gula...">
+
+    <button onclick="searchProduct()">Cari</button>
+    <button onclick="showCart()">
+      🛒 Keranjang (<span id="cartCount">0</span>)
+    </button>
+  </header>
+
+  <nav class="menu">
+    <a href="index.html#beranda">Beranda</a>
+    <a href="kategori.html">Kategori</a>
+    <a href="index.html#produk">Produk</a>
+    <a href="index.html#promo">Promo</a>
+  </nav>
+
+  <main>
+    <section>
+      <h2>Kategori Produk</h2>
+      <p class="subtitle">
+        Temukan berbagai kebutuhan sembako untuk sehari-hari.
+      </p>
+
+      ```html
+<div class="categories">
+  <button onclick="filterCategory('Semua')">
+    🛍️<br>Semua Produk
+  </button>
+
+  <button onclick="filterCategory('Bahan Pokok Utama')">
+    🌾<br>Bahan Pokok Utama
+  </button>
+
+  <button onclick="filterCategory('Bahan Masakan & Bumbu Dapur')">
+    🧂<br>Bumbu Dapur
+  </button>
+
+  <button onclick="filterCategory('Makanan Cepat Saji & Instan')">
+    🍜<br>Makanan Instan
+  </button>
+
+  <button onclick="filterCategory('Minuman & Bahan Minuman')">
+    🥤<br>Minuman
+  </button>
+
+  <button onclick="filterCategory('Jajanan & Makanan Ringan')">
+    🍪<br>Makanan Ringan
+  </button>
+
+  <button onclick="filterCategory('Kebutuhan Rumah Tangga & Kebersihan')">
+    🧺<br>Kebutuhan Rumah Tangga
+  </button>
+
+  <button onclick="filterCategory('Kebersihan Diri & Perlengkapan Bayi')">
+    🧴<br>Kebersihan Diri & Bayi
+  </button>
+</div>
+    </section>
+
+    <section id="produk">
+      ```html
+<div class="category-toolbar">
+  <div>
+    <h2>Daftar Produk</h2>
+    <p class="subtitle">
+      Pilih produk sesuai kebutuhanmu.
+    </p>
+    <p id="resultInfo">35 produk ditemukan</p>
+  </div>
+
+  <div class="sort-box">
+    <label for="sortProducts">Urutkan:</label>
+    <select id="sortProducts">
+      <option value="default">Produk Default</option>
+      <option value="cheap">Harga Terendah</option>
+      <option value="expensive">Harga Tertinggi</option>
+      <option value="name">Nama Produk</option>
+    </select>
+  </div>
+</div>
+
+```html
+<div class="category-layout">
+
+  <aside class="filter-sidebar">
+    <h3>Filter Produk</h3>
+
+    <div class="filter-group">
+      <label for="categorySearch">Cari Produk</label>
+      <input
+        type="search"
+        id="categorySearch"
+        placeholder="Nama produk..."
+      >
+    </div>
+
+    <div class="filter-group">
+      <label for="minPrice">Harga Minimum</label>
+      <input
+        type="number"
+        id="minPrice"
+        min="0"
+        placeholder="Contoh: 5000"
+      >
+    </div>
+
+    <div class="filter-group">
+      <label for="maxPrice">Harga Maksimum</label>
+      <input
+        type="number"
+        id="maxPrice"
+        min="0"
+        placeholder="Contoh: 30000"
+      >
+    </div>
+
+    <button type="button" class="btn" onclick="applySidebarFilters()">
+      Terapkan Filter
+    </button>
+
+    <button type="button" class="btn" onclick="clearSidebarFilters()">
+      Reset Filter
+    </button>
+  </aside>
+
+  <div class="products" id="productList"></div>
+
+</div>
+
+    </section>
+  </main>
+
+  <footer>
+    <h3>🌿 SembakoKu</h3>
+    <p>Belanja sembako jadi lebih mudah.</p>
+    <small>© 2026 SembakoKu — Proyek pembelajaran.</small>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

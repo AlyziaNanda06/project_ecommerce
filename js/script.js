@@ -60,7 +60,7 @@ const products = [
 // STATE
 // ==========================================
 
-let cart = [];
+let cart = JSON.parse(localStorage.getItem("segarBersahabatCart")) || [];
 let activeCategory = "Semua";
 let currentSearch = "";
 let noticeTimer;
@@ -89,6 +89,9 @@ function escapeHTML(value) {
 
 function getProduct(id) {
   return products.find(product => product.id === Number(id));
+function openProductDetail(productId) {
+}
+  window.location.href = `detail-produk.html?id=${productId}`;
 }
 
 function showMessage(message) {
@@ -111,8 +114,15 @@ function showMessage(message) {
 // FILTER, CARI, DAN URUTKAN
 // ==========================================
 
+
 function getFilteredProducts() {
   const query = currentSearch.trim().toLocaleLowerCase("id-ID");
+
+  const minValue = document.getElementById("minPrice")?.value;
+  const maxValue = document.getElementById("maxPrice")?.value;
+
+  const minPrice = minValue ? Number(minValue) : 0;
+  const maxPrice = maxValue ? Number(maxValue) : Infinity;
 
   let filtered = products.filter(product => {
     const matchCategory =
@@ -126,10 +136,16 @@ function getFilteredProducts() {
       product.description
     ].join(" ").toLocaleLowerCase("id-ID");
 
-    return matchCategory && searchText.includes(query);
+    const matchSearch = searchText.includes(query);
+    const matchPrice =
+      product.price >= minPrice &&
+      product.price <= maxPrice;
+
+    return matchCategory && matchSearch && matchPrice;
   });
 
-  const sort = document.getElementById("sortProducts")?.value || "default";
+  const sort =
+    document.getElementById("sortProducts")?.value || "default";
 
   if (sort === "cheap") {
     filtered.sort((a, b) => a.price - b.price);
@@ -176,7 +192,12 @@ function renderProducts() {
           ${escapeHTML(product.category)}
         </p>
 
-        <h3>${escapeHTML(product.name)}</h3>
+        <h3>
+  <a class="product-title-link"
+     href="detail-produk.html?id=${product.id}">
+    ${escapeHTML(product.name)}
+  </a>
+</h3>
 
         <p class="product-description">
           ${escapeHTML(product.description)}
@@ -246,6 +267,50 @@ function resetFilters() {
   filterCategory("Semua");
 }
 
+
+function applySidebarFilters() {
+  const sidebarSearch = document.getElementById("categorySearch");
+  const navbarSearch = document.getElementById("searchInput");
+
+  currentSearch = sidebarSearch ? sidebarSearch.value : "";
+
+  if (navbarSearch) {
+    navbarSearch.value = currentSearch;
+  }
+
+  const minPrice = Number(
+    document.getElementById("minPrice")?.value || 0
+  );
+
+  const maxInput = document.getElementById("maxPrice")?.value;
+  const maxPrice = maxInput ? Number(maxInput) : Infinity;
+
+  if (minPrice < 0 || maxPrice < 0 || minPrice > maxPrice) {
+    showMessage("Periksa kembali rentang harga.");
+    return;
+  }
+
+  renderProducts();
+}
+
+function clearSidebarFilters() {
+  activeCategory = "Semua";
+  currentSearch = "";
+
+  [
+    "categorySearch",
+    "searchInput",
+    "minPrice",
+    "maxPrice"
+  ].forEach(id => {
+    const element = document.getElementById(id);
+    if (element) element.value = "";
+  });
+
+  renderProducts();
+}
+
+
 // ==========================================
 // KERANJANG BELANJA
 // ==========================================
@@ -308,6 +373,7 @@ function removeFromCart(productId) {
 }
 
 function renderCart() {
+  localStorage.setItem("segarBersahabatCart", JSON.stringify(cart));
   const cartItems = document.getElementById("cartItems");
   const cartCount = document.getElementById("cartCount");
   const cartTotal = document.getElementById("cartTotal");
