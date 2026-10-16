@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Belanja sembako berkualitas dengan harga bersahabat di Segar Bersahabat.">
+    <title>Kategori Produk | Segar Bersahabat</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* KATEGORI PRODUK */
+        .category-page {
+            max-width: 1200px;
+            width: 92%;
+            margin: 35px auto 60px;
+        }
+
+        .category-banner {
+            background: linear-gradient(120deg, #174d35, #3f9560);
+            color: white;
+            padding: 42px 35px;
+            border-radius: 18px;
+            margin-bottom: 30px;
+        }
+
+        .category-banner h1 {
+            font-size: clamp(27px, 4vw, 38px);
+            margin-bottom: 10px;
+        }
+
+        .category-banner p {
+            max-width: 600px;
+            line-height: 1.8;
+            color: #e9f8ed;
+        }
+
+        .breadcrumb {
+            margin-bottom: 18px;
+            color: #6c7b70;
+            font-size: 14px;
+        }
+
+        .breadcrumb a {
+            color: #287747;
+            text-decoration: none;
+        }
+
+        .category-layout {
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr);
+            gap: 28px;
+            align-items: start;
+        }
+
+        .category-sidebar {
+            background: white;
+            border: 1px solid #e3ebe5;
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 5px 18px rgba(20, 65, 40, 0.05);
+        }
+
+        .sidebar-section + .sidebar-section {
+            border-top: 1px solid #e7eee8;
+            margin-top: 23px;
+            padding-top: 22px;
+        }
+
+        .sidebar-section h3 {
+            font-size: 17px;
+            margin-bottom: 14px;
+            color: #19372a;
+        }
+
+        .category-search,
+        .price-input,
+        .category-sort {
+            width: 100%;
+            min-width: 0;
+            padding: 11px 12px;
+            border: 1px solid #d6e2d9;
+            border-radius: 9px;
+            font: inherit;
+            background: white;
+            color: #19372a;
+            outline: none;
+        }
+
+        .category-search:focus,
+        .price-input:focus,
+        .category-sort:focus {
+            border-color: #388b53;
+            box-shadow: 0 0 0 3px rgba(56, 139, 83, 0.12);
+        }
+
+        .category-filter-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .category-filter-list label {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: #45564a;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .category-filter-list input {
+            accent-color: #287747;
+        }
+
+        .price-filter {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 9px;
+        }
+
+        .price-filter .price-input {
+            font-size: 13px;
+        }
+
+        .filter-button {
+            width: 100%;
+            border: none;
+            border-radius: 9px;
+            padding: 11px;
+            background: #287747;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+
+        .filter-button:hover {
+            background: #1d5d36;
+        }
+
+        .reset-button {
+            background: #edf5ee;
+            color: #287747;
+        }
+
+        .reset-button:hover {
+            background: #dcecdf;
+        }
+
+        .products-area {
+            min-width: 0;
+        }
+
+        .products-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .products-heading h2 {
+            font-size: 23px;
+            color: #19372a;
+        }
+
+        .products-heading p {
+            font-size: 14px;
+            color: #738076;
+            margin-top: 4px;
+        }
+
+        .sort-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 14px;
+            color: #58665c;
+        }
+
+        .category-sort {
+            width: auto;
+            min-width: 175px;
+            cursor: pointer;
+        }
+
+        /* Produk mengikuti data dari js/script.js */
+        #productList {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            min-width: 0;
+            overflow: hidden;
+            border: 1px solid #e3ebe5;
+            border-radius: 15px;
+            background: white;
+            box-shadow: 0 4px 15px rgba(20, 65, 40, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 24px rgba(20, 65, 40, 0.1);
+        }
+
+        .product-image {
+            min-height: 160px;
+            height: 180px;
+            background: #f1f7f1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 12px;
+        }
+
+        .product-info {
+            padding: 16px;
+        }
+
+        .product-category {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: bold;
+            color: #287747;
+            background: #eaf5ec;
+            padding: 5px 8px;
+            border-radius: 6px;
+            margin-bottom: 9px;
+        }
+
+        .product-title-link {
+            color: #19372a;
+            text-decoration: none;
+        }
+
+        .product-title-link:hover {
+            color: #287747;
+        }
+
+        .product-title-link h3,
+        .product-title-link {
+            font-weight: bold;
+        }
+
+        .product-description {
+            color: #778279;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 8px 0;
+        }
+
+        .product-stock {
+            color: #647469;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        .product-bottom {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border-top: 1px solid #edf1ed;
+            padding-top: 12px;
+        }
+
+        .product-price {
+            color: #287747;
+            font-size: 17px;
+            font-weight: bold;
+        }
+
+        .btn-add {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: #287747;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-add:hover {
+            background: #1d5d36;
+        }
+
+        .empty-products {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 45px 20px;
+            border: 1px dashed #cbdacd;
+            border-radius: 14px;
+            color: #66776b;
+            background: #fbfdfb;
+        }
+
+        .empty-products h3 {
+            margin-bottom: 8px;
+            color: #19372a;
+        }
+
+        .category-note {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            background: #eff7ef;
+            color: #385d42;
+            line-height: 1.8;
+            font-size: 14px;
+        }
+
+        @media (max-width: 1000px) {
+            .category-layout {
+                grid-template-columns: 220px minmax(0, 1fr);
+                gap: 18px;
+            }
+
+            #productList {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 14px;
+            }
+        }
+
+        @media (max-width: 650px) {
+            .category-page {
+                width: 94%;
+                margin-top: 20px;
+            }
+
+            .category-banner {
+                padding: 28px 22px;
+            }
+
+            .category-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .category-sidebar {
+                padding: 18px;
+            }
+
+            .products-heading {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .sort-wrapper {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .category-sort {
+                flex: 1;
+                min-width: 0;
+            }
+
+            #productList {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .product-image {
+                height: 135px;
+                min-height: 135px;
+            }
+
+            .product-info {
+                padding: 11px;
+            }
+
+            .product-price {
+                font-size: 14px;
+            }
+
+            .product-description {
+                font-size: 12px;
+            }
+
+            .product-title-link {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            #productList {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">
+                🥬 Segar Bersahabat
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="index.html">Beranda</a></li>
+                <li><a href="kategori.html" class="active">Kategori</a></li>
+                <li>
+                    <a href="keranjang.html">
+                        Keranjang
+                        <span id="cartCount">0</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="category-page">
+
+        <!-- BREADCRUMB -->
+        <div class="breadcrumb">
+            <a href="index.html">Beranda</a> / Kategori Produk
+        </div>
+
+        <!-- BANNER -->
+        <section class="category-banner">
+            <h1>Belanja Sembako Jadi Lebih Mudah! 🌿</h1>
+            <p>
+                Temukan kebutuhan sehari-hari mulai dari beras, minyak goreng,
+                gula, tepung, hingga berbagai bahan dapur pilihan dengan harga
+                bersahabat.
+            </p>
+        </section>
+
+        <!-- SIDEBAR DAN PRODUK -->
+        <section class="category-layout">
+
+            <aside class="category-sidebar">
+
+                <!-- PENCARIAN -->
+                <div class="sidebar-section">
+                    <h3>🔎 Cari Produk</h3>
+
+                    <input
+                        type="search"
+                        id="categorySearch"
+                        class="category-search"
+                        placeholder="Cari nama produk..."
+                        aria-label="Cari nama produk"
+                    >
+                </div>
+
+                <!-- FILTER KATEGORI -->
+                <div class="sidebar-section">
+                    <h3>📦 Kategori Produk</h3>
+
+                    <div class="category-filter-list">
+                        <label>
+                            <input type="radio" name="categoryFilter"
+                                   value="all" checked>
+                            Semua Produk
+                        </label>
+
+                        <label>
+                            <input type="radio" name="categoryFilter"
+                                   value="Beras">
+                            Beras
+                        </label>
+
+                        <label>
+                            <input type="radio" name="categoryFilter"
+                                   value="Minyak Goreng">
+                            Minyak Goreng
+                        </label>
+
+                        <label>
+                            <input type="radio" name="categoryFilter"
+                                   value="Gula">
+                            Gula
+                        </label>
+
+                        <label>
+                            <input type="radio" name="categoryFilter"
+                                   value="Tepung">
+                            Tepung
+                        </label>
+
+                        <label>
+                            <input type="radio" name="categoryFilter"
+                                   value="Bumbu">
+                            Bumbu Dapur
+                        </label>
+
+                        <label>
+                            <input type="radio" name="categoryFilter"
+                                   value="Makanan">
+                            Makanan
+                        </label>
+
+                        <label>
+                            <input type="radio" name="categoryFilter"
+                                   value="Minuman">
+                            Minuman
+                        </label>
+                    </div>
+                </div>
+
+                <!-- FILTER HARGA -->
+                <div class="sidebar-section">
+                    <h3>💰 Rentang Harga</h3>
+
+                    <div class="price-filter">
+                        <input
+                            type="number"
+                            id="minPrice"
+                            class="price-input"
+                            min="0"
+                            placeholder="Min. Rp"
+                            aria-label="Harga minimum"
+                        >
+
+                        <input
+                            type="number"
+                            id="maxPrice"
+                            class="price-input"
+                            min="0"
+                            placeholder="Maks. Rp"
+                            aria-label="Harga maksimum"
+                        >
+                    </div>
+
+                    <button type="button" class="filter-button"
+                            id="applyPriceFilter">
+                        Terapkan Filter
+                    </button>
+
+                    <button type="button"
+                            class="filter-button reset-button"
+                            id="resetFilters">
+                        Reset Filter
+                    </button>
+                </div>
+
+            </aside>
+
+            <!-- AREA PRODUK -->
+            <div class="products-area">
+
+                <div class="products-heading">
+                    <div>
+                        <h2>Semua Produk</h2>
+                        <p>Temukan kebutuhan harian favoritmu.</p>
+                    </div>
+
+                    <div class="sort-wrapper">
+                        <label for="sortProducts">Urutkan:</label>
+
+                        <select id="sortProducts" class="category-sort">
+                            <option value="default">Produk Terbaru</option>
+                            <option value="price-low">Harga Terendah</option>
+                            <option value="price-high">Harga Tertinggi</option>
+                            <option value="name">Nama A–Z</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ID INI DIPAKAI OLEH js/script.js -->
+                <div id="productList">
+                    <div class="empty-products">
+                        <p>Memuat produk...</p>
+                    </div>
+                </div>
+
+                <div class="category-note">
+                    <strong>Belanja hemat bersama Segar Bersahabat!</strong>
+                    <br>
+                    Pilih produk sesuai kebutuhanmu. Harga dan informasi stok
+                    mengikuti data produk yang tersedia pada website.
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div>
+                <h3>🥬 Segar Bersahabat</h3>
+                <p>
+                    Teman belanja kebutuhan sehari-hari dengan harga
+                    bersahabat.
+                </p>
+            </div>
+
+            <div>
+                <h4>Navigasi</h4>
+                <p><a href="index.html">Beranda</a></p>
+                <p><a href="kategori.html">Kategori Produk</a></p>
+                <p><a href="keranjang.html">Keranjang</a></p>
+            </div>
+
+            <div>
+                <h4>Informasi</h4>
+                <p>Produk pilihan untuk kebutuhan rumah tangga.</p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2026 Segar Bersahabat. Semua hak dilindungi.</p>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+
+    <!-- Filter kategori dan rentang harga -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const categorySearch = document.getElementById("categorySearch");
+            const minPrice = document.getElementById("minPrice");
+            const maxPrice = document.getElementById("maxPrice");
+            const applyButton = document.getElementById("applyPriceFilter");
+            const resetButton = document.getElementById("resetFilters");
+            const categoryRadios = document.querySelectorAll(
+                'input[name="categoryFilter"]'
+            );
+
+            let selectedCategory = "all";
+            let minValue = "";
+            let maxValue = "";
+
+            function filterCategoryProducts() {
+                const keyword = categorySearch.value.trim().toLowerCase();
+                const cards = document.querySelectorAll(
+                    "#productList .product-card"
+                );
+
+                cards.forEach(function (card) {
+                    const text = card.textContent.toLowerCase();
+                    const categoryElement =
+                        card.querySelector(".product-category");
+
+                    const categoryText = categoryElement
+                        ? categoryElement.textContent.trim().toLowerCase()
+                        : "";
+
+                    const priceElement = card.querySelector(".product-price");
+                    const priceText = priceElement
+                        ? priceElement.textContent
+                        : "";
+
+                    const numericPrice = Number(
+                        priceText.replace(/[^\d]/g, "")
+                    );
+
+                    const matchesKeyword = text.includes(keyword);
+
+                    const matchesCategory =
+                        selectedCategory === "all" ||
+                        categoryText.includes(selectedCategory.toLowerCase());
+
+                    const matchesMin =
+                        minValue === "" ||
+                        numericPrice >= Number(minValue);
+
+                    const matchesMax =
+                        maxValue === "" ||
+                        numericPrice <= Number(maxValue);
+
+                    card.style.display =
+                        matchesKeyword && matchesCategory &&
+                        matchesMin && matchesMax
+                            ? ""
+                            : "none";
+                });
+
+                let visibleCount = 0;
+
+                cards.forEach(function (card) {
+                    if (card.style.display !== "none") {
+                        visibleCount++;
+                    }
+                });
+
+                let emptyMessage = document.getElementById(
+                    "categoryEmptyMessage"
+                );
+
+                if (!emptyMessage) {
+                    emptyMessage = document.createElement("div");
+                    emptyMessage.id = "categoryEmptyMessage";
+                    emptyMessage.className = "empty-products";
+                    emptyMessage.innerHTML =
+                        "<h3>Produk tidak ditemukan</h3>" +
+                        "<p>Coba ubah kata pencarian atau filter kamu.</p>";
+                    document.getElementById("productList")
+                        .appendChild(emptyMessage);
+                }
+
+                emptyMessage.style.display =
+                    visibleCount === 0 ? "block" : "none";
+            }
+
+            categorySearch.addEventListener("input", filterCategoryProducts);
+
+            categoryRadios.forEach(function (radio) {
+                radio.addEventListener("change", function () {
+                    selectedCategory = this.value;
+                    filterCategoryProducts();
+                });
+            });
+
+            applyButton.addEventListener("click", function () {
+                minValue = minPrice.value;
+                maxValue = maxPrice.value;
+
+                if (
+                    minValue !== "" &&
+                    maxValue !== "" &&
+                    Number(minValue) > Number(maxValue)
+                ) {
+                    alert("Harga minimum tidak boleh melebihi harga maksimum.");
+                    return;
+                }
+
+                filterCategoryProducts();
+            });
+
+            resetButton.addEventListener("click", function () {
+                categorySearch.value = "";
+                minPrice.value = "";
+                maxPrice.value = "";
+                minValue = "";
+                maxValue = "";
+                selectedCategory = "all";
+
+                const allRadio = document.querySelector(
+                    'input[name="categoryFilter"][value="all"]'
+                );
+
+                if (allRadio) {
+                    allRadio.checked = true;
+                }
+
+                const sortProducts = document.getElementById("sortProducts");
+
+                if (sortProducts) {
+                    sortProducts.value = "default";
+                }
+
+                // Minta script utama merender ulang jika fungsi tersedia.
+                if (typeof renderProducts === "function") {
+                    renderProducts();
+                }
+
+                filterCategoryProducts();
+            });
+        });
+    </script>
+
+</body>
+</html>

@@ -1,4 +1,3 @@
-
 "use strict";
 
 // ==========================================
@@ -7,9 +6,9 @@
 
 const products = [
   // 1. Bahan Pokok Utama
-  { id: 1, name: "Beras Setra Ramos 5 kg", category: "Bahan Pokok Utama", brand: "Setra Ramos", price: 75000, stock: 20, emoji: "🌾", description: "Beras pulen untuk kebutuhan sehari-hari." },
-  { id: 2, name: "Minyak Goreng 1 Liter", category: "Bahan Pokok Utama", brand: "Minyak Kita", price: 18000, stock: 30, emoji: "🫗", description: "Minyak goreng kemasan pouch 1 liter." },
-  { id: 3, name: "Gula Pasir 1 kg", category: "Bahan Pokok Utama", brand: "Gula Pilihan", price: 17500, stock: 25, emoji: "🍚", description: "Gula pasir untuk minuman dan masakan." },
+  { id: 1, name: "Beras Setra Ramos 5 kg", category: "Bahan Pokok Utama", brand: "Setra Ramos", price: 75000, stock: 20, emoji: "🌾", description: "Beras pulen untuk kebutuhan sehari-hari.", discountPercent: 10 },
+  { id: 2, name: "Minyak Goreng 1 Liter", category: "Bahan Pokok Utama", brand: "Minyak Kita", price: 18000, stock: 30, emoji: "🫗", description: "Minyak goreng kemasan pouch 1 liter.", discountPercent: 10 },
+  { id: 3, name: "Gula Pasir 1 kg", category: "Bahan Pokok Utama", brand: "Gula Pilihan", price: 17500, stock: 25, emoji: "🍚", description: "Gula pasir untuk minuman dan masakan.", discountPercent: 5 },
   { id: 4, name: "Tepung Terigu 1 kg", category: "Bahan Pokok Utama", brand: "Segitiga Biru", price: 14000, stock: 18, emoji: "🌾", description: "Tepung terigu serbaguna." },
   { id: 5, name: "Telur Ayam 1 kg", category: "Bahan Pokok Utama", brand: "Telur Segar", price: 30000, stock: 15, emoji: "🥚", description: "Telur ayam untuk kebutuhan dapur." },
 
@@ -60,10 +59,16 @@ const products = [
 // STATE
 // ==========================================
 
-let cart = [];
+let cart = JSON.parse(localStorage.getItem("segarBersahabatCart")) || [];
 let activeCategory = "Semua";
 let currentSearch = "";
 let noticeTimer;
+let appliedVoucher = null;
+let voucherInputValue = "";
+
+// Ongkir dan voucher untuk simulasi frontend.
+const SHIPPING_COST = 10000;
+const MINIMUM_VOUCHER = 50000;
 
 // ==========================================
 // FORMAT HARGA DAN UTILITAS
@@ -91,8 +96,59 @@ function getProduct(id) {
   return products.find(product => product.id === Number(id));
 }
 
+function openProductDetail(productId) {
+  window.location.href = `detail-produk.html?id=${productId}`;
+}
+
+function getDiscountedPrice(product) {
+  const discount = product.discountPercent || 0;
+  return Math.round(product.price * (1 - discount / 100));
+}
+
+function getCartSubtotal() {
+  return cart.reduce((sum, item) => {
+    const product = getProduct(item.id);
+    return sum + (product ? getDiscountedPrice(product) * item.quantity : 0);
+  }, 0);
+}
+
+function getVoucherBenefits(subtotal) {
+  let productDiscount = 0;
+  let shippingDiscount = 0;
+
+  if (appliedVoucher && subtotal >= MINIMUM_VOUCHER) {
+    if (appliedVoucher === "HEMAT10") {
+      productDiscount = Math.min(Math.round(subtotal * 0.10), 20000);
+    }
+
+    if (appliedVoucher === "GRATISONGKIR") {
+      shippingDiscount = Math.min(SHIPPING_COST, 10000);
+    }
+  }
+
+  return { productDiscount, shippingDiscount };
+}
+
+function getOrderTotals() {
+  const subtotal = getCartSubtotal();
+  const benefits = getVoucherBenefits(subtotal);
+  const shipping = subtotal > 0 ? SHIPPING_COST : 0;
+
+  return {
+    subtotal,
+    productDiscount: benefits.productDiscount,
+    shipping,
+    shippingDiscount: benefits.shippingDiscount,
+    total: Math.max(
+      0,
+      subtotal - benefits.productDiscount + shipping - benefits.shippingDiscount
+    )
+  };
+}
+
 function showMessage(message) {
   const notice = document.getElementById("siteNotice");
+
   if (!notice) {
     window.alert(message);
     return;
@@ -114,6 +170,12 @@ function showMessage(message) {
 function getFilteredProducts() {
   const query = currentSearch.trim().toLocaleLowerCase("id-ID");
 
+  const minValue = document.getElementById("minPrice")?.value;
+  const maxValue = document.getElementById("maxPrice")?.value;
+
+  const minPrice = minValue ? Number(minValue) : 0;
+  const maxPrice = maxValue ? Number(maxValue) : Infinity;
+
   let filtered = products.filter(product => {
     const matchCategory =
       activeCategory === "Semua" ||
@@ -126,15 +188,22 @@ function getFilteredProducts() {
       product.description
     ].join(" ").toLocaleLowerCase("id-ID");
 
-    return matchCategory && searchText.includes(query);
+    const matchSearch = searchText.includes(query);
+    const effectivePrice = getDiscountedPrice(product);
+    const matchPrice =
+      effectivePrice >= minPrice &&
+      effectivePrice <= maxPrice;
+
+    return matchCategory && matchSearch && matchPrice;
   });
 
-  const sort = document.getElementById("sortProducts")?.value || "default";
+  const sort =
+    document.getElementById("sortProducts")?.value || "default";
 
   if (sort === "cheap") {
-    filtered.sort((a, b) => a.price - b.price);
+    filtered.sort((a, b) => getDiscountedPrice(a) - getDiscountedPrice(b));
   } else if (sort === "expensive") {
-    filtered.sort((a, b) => b.price - a.price);
+    filtered.sort((a, b) => getDiscountedPrice(b) - getDiscountedPrice(a));
   } else if (sort === "name") {
     filtered.sort((a, b) => a.name.localeCompare(b.name, "id"));
   }
@@ -165,43 +234,70 @@ function renderProducts() {
     return;
   }
 
-  container.innerHTML = filtered.map(product => `
-    <article class="product-card">
-      <div class="product-image">
-        <span>${product.emoji}</span>
-      </div>
+  container.innerHTML = filtered.map(product => {
+    const discountedPrice = getDiscountedPrice(product);
+    const hasDiscount = (product.discountPercent || 0) > 0;
 
-      <div class="product-info">
-        <p class="product-category">
-          ${escapeHTML(product.category)}
-        </p>
-
-        <h3>${escapeHTML(product.name)}</h3>
-
-        <p class="product-description">
-          ${escapeHTML(product.description)}
-        </p>
-
-        <p class="product-stock">
-          ${product.stock > 0
-            ? `Stok tersedia: ${product.stock}`
-            : "Stok habis"}
-        </p>
-
-        <div class="product-bottom">
-          <strong class="product-price">
-            ${formatRupiah(product.price)}
-          </strong>
-
-          <button class="btn-add"
-            onclick="addToCart(${product.id})"
-            ${product.stock <= 0 ? "disabled" : ""}>
-            ${product.stock > 0 ? "+ Keranjang" : "Habis"}
-          </button>
+    return `
+      <article class="product-card">
+        <div class="product-image">
+          <span>${product.emoji}</span>
+          ${hasDiscount ? `
+            <span class="discount-badge">
+              Diskon ${product.discountPercent}%
+            </span>` : ""}
         </div>
-      </div>
-    </article>
-  `).join("");
+
+        <div class="product-info">
+          <p class="product-category">
+            ${escapeHTML(product.category)}
+          </p>
+
+          <h3>
+            <a class="product-title-link"
+               href="detail-produk.html?id=${product.id}">
+              ${escapeHTML(product.name)}
+            </a>
+          </h3>
+
+          <p class="product-description">
+            ${escapeHTML(product.description)}
+          </p>
+
+          <p class="product-stock">
+            ${product.stock > 0
+              ? `Stok tersedia: ${product.stock}`
+              : "Stok habis"}
+          </p>
+
+          <div class="product-bottom">
+            <div class="product-price">
+              ${hasDiscount ? `
+                <span style="text-decoration: line-through; color: #888; font-size: 13px;">
+                  ${formatRupiah(product.price)}
+                </span>
+                <br>
+                <strong style="color: #dc3545;">
+                  ${formatRupiah(discountedPrice)}
+                </strong>
+                <span style="color: #dc3545; font-size: 12px;">
+                  Diskon ${product.discountPercent}%
+                </span>
+              ` : `
+                <strong>${formatRupiah(product.price)}</strong>
+              `}
+            </div>
+
+            <button class="btn-add"
+              onclick="addToCart(${product.id})"
+              ${product.stock <= 0 ? "disabled" : ""}>
+              ${product.stock > 0 ? "+ Keranjang" : "Habis"}
+            </button>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
 }
 
 function searchProduct() {
@@ -244,6 +340,48 @@ function resetFilters() {
   if (input) input.value = "";
 
   filterCategory("Semua");
+}
+
+function applySidebarFilters() {
+  const sidebarSearch = document.getElementById("categorySearch");
+  const navbarSearch = document.getElementById("searchInput");
+
+  currentSearch = sidebarSearch ? sidebarSearch.value : "";
+
+  if (navbarSearch) {
+    navbarSearch.value = currentSearch;
+  }
+
+  const minPrice = Number(
+    document.getElementById("minPrice")?.value || 0
+  );
+
+  const maxInput = document.getElementById("maxPrice")?.value;
+  const maxPrice = maxInput ? Number(maxInput) : Infinity;
+
+  if (minPrice < 0 || maxPrice < 0 || minPrice > maxPrice) {
+    showMessage("Periksa kembali rentang harga.");
+    return;
+  }
+
+  renderProducts();
+}
+
+function clearSidebarFilters() {
+  activeCategory = "Semua";
+  currentSearch = "";
+
+  [
+    "categorySearch",
+    "searchInput",
+    "minPrice",
+    "maxPrice"
+  ].forEach(id => {
+    const element = document.getElementById(id);
+    if (element) element.value = "";
+  });
+
+  renderProducts();
 }
 
 // ==========================================
@@ -303,11 +441,69 @@ function changeCartQuantity(productId, change) {
 
 function removeFromCart(productId) {
   cart = cart.filter(item => item.id !== Number(productId));
+
+  if (cart.length === 0) {
+    appliedVoucher = null;
+    voucherInputValue = "";
+  }
+
   renderCart();
   showMessage("Produk dihapus dari keranjang.");
 }
 
+// ==========================================
+// VOUCHER
+// ==========================================
+
+function applyVoucher() {
+  const input = document.getElementById("voucherInput");
+  const code = (input ? input.value : voucherInputValue)
+    .trim()
+    .toUpperCase();
+
+  voucherInputValue = code;
+
+  if (cart.length === 0) {
+    showMessage("Tambahkan produk sebelum menggunakan voucher.");
+    return;
+  }
+
+  if (getCartSubtotal() < MINIMUM_VOUCHER) {
+    showMessage("Voucher berlaku untuk belanja minimal Rp50.000.");
+    return;
+  }
+
+  if (code !== "HEMAT10" && code !== "GRATISONGKIR") {
+    appliedVoucher = null;
+    renderCart();
+    showMessage("Kode voucher tidak valid.");
+    return;
+  }
+
+  appliedVoucher = code;
+  renderCart();
+
+  showMessage(
+    code === "HEMAT10"
+      ? "Voucher HEMAT10 berhasil digunakan!"
+      : "Voucher GRATISONGKIR berhasil digunakan!"
+  );
+}
+
+function removeVoucher() {
+  appliedVoucher = null;
+  voucherInputValue = "";
+  renderCart();
+  showMessage("Voucher berhasil dilepas.");
+}
+
+// ==========================================
+// TAMPILAN RINGKASAN KERANJANG
+// ==========================================
+
 function renderCart() {
+  localStorage.setItem("segarBersahabatCart", JSON.stringify(cart));
+
   const cartItems = document.getElementById("cartItems");
   const cartCount = document.getElementById("cartCount");
   const cartTotal = document.getElementById("cartTotal");
@@ -317,13 +513,10 @@ function renderCart() {
     (sum, item) => sum + item.quantity, 0
   );
 
-  const totalPrice = cart.reduce((sum, item) => {
-    const product = getProduct(item.id);
-    return sum + (product ? product.price * item.quantity : 0);
-  }, 0);
+  const totals = getOrderTotals();
 
   if (cartCount) cartCount.textContent = totalQuantity;
-  if (cartTotal) cartTotal.textContent = formatRupiah(totalPrice);
+  if (cartTotal) cartTotal.textContent = formatRupiah(totals.total);
 
   if (summaryCount) {
     summaryCount.textContent = `${totalQuantity} barang`;
@@ -331,54 +524,142 @@ function renderCart() {
 
   if (!cartItems) return;
 
+  const voucherPanel = `
+    <section class="voucher-panel"
+      style="margin: 16px 0; padding: 16px; border: 1px solid #dce8df; border-radius: 12px;">
+      <h3 style="margin: 0 0 8px;">🎟️ Voucher Belanja</h3>
+      <p style="font-size: 13px; margin: 0 0 10px;">
+        HEMAT10: diskon 10%, maksimal Rp20.000.
+        GRATISONGKIR: potongan ongkir maksimal Rp10.000.
+        Minimal belanja Rp50.000.
+      </p>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <input
+          id="voucherInput"
+          type="text"
+          placeholder="Masukkan kode voucher"
+          value="${escapeHTML(voucherInputValue)}"
+          style="flex: 1; min-width: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 8px;"
+          ${cart.length === 0 ? "disabled" : ""}
+        >
+
+        <button type="button"
+          onclick="applyVoucher()"
+          style="padding: 10px 14px; border: none; border-radius: 8px; cursor: pointer;"
+          ${cart.length === 0 ? "disabled" : ""}>
+          Pakai Voucher
+        </button>
+      </div>
+
+      ${appliedVoucher ? `
+        <p style="margin: 10px 0 0; color: #218838;">
+          Voucher aktif: <strong>${escapeHTML(appliedVoucher)}</strong>
+          <button type="button" onclick="removeVoucher()"
+            style="margin-left: 8px; cursor: pointer;">
+            Hapus
+          </button>
+        </p>
+      ` : ""}
+    </section>
+  `;
+
   if (cart.length === 0) {
     cartItems.innerHTML = `
       <p class="empty-cart">Keranjang masih kosong.</p>
+      ${voucherPanel}
     `;
     return;
   }
 
+  const cartList = cart.map(item => {
+    const product = getProduct(item.id);
+    if (!product) return "";
+
+    const unitPrice = getDiscountedPrice(product);
+    const hasDiscount = (product.discountPercent || 0) > 0;
+
+    return `
+      <div class="cart-item">
+        <div class="cart-item-info">
+          <strong>${escapeHTML(product.name)}</strong>
+
+          <span>
+            ${hasDiscount
+              ? `<span style="text-decoration: line-through; color: #888;">${formatRupiah(product.price)}</span> `
+              : ""}
+            ${formatRupiah(unitPrice)} × ${item.quantity}
+          </span>
+
+          <strong>${formatRupiah(unitPrice * item.quantity)}</strong>
+        </div>
+
+        <div class="cart-item-actions">
+          <button type="button"
+            aria-label="Kurangi jumlah"
+            onclick="changeCartQuantity(${product.id}, -1)">
+            −
+          </button>
+
+          <span>${item.quantity}</span>
+
+          <button type="button"
+            aria-label="Tambah jumlah"
+            onclick="changeCartQuantity(${product.id}, 1)">
+            +
+          </button>
+
+          <button type="button" class="remove-item"
+            onclick="removeFromCart(${product.id})">
+            Hapus
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
   cartItems.innerHTML = `
+    ${voucherPanel}
+
     <div class="cart-list">
-      ${cart.map(item => {
-        const product = getProduct(item.id);
-        if (!product) return "";
+      ${cartList}
+    </div>
 
-        return `
-          <div class="cart-item">
-            <div class="cart-item-info">
-              <strong>${escapeHTML(product.name)}</strong>
-              <span>
-                ${formatRupiah(product.price)} × ${item.quantity}
-              </span>
-              <strong>
-                ${formatRupiah(product.price * item.quantity)}
-              </strong>
-            </div>
+    <div class="cart-calculation"
+      style="margin-top: 16px; padding: 16px; border: 1px solid #dce8df; border-radius: 12px;">
 
-            <div class="cart-item-actions">
-              <button type="button"
-                aria-label="Kurangi jumlah"
-                onclick="changeCartQuantity(${product.id}, -1)">
-                −
-              </button>
+      <h3 style="margin-top: 0;">Ringkasan Belanja</h3>
 
-              <span>${item.quantity}</span>
+      <div style="display: flex; justify-content: space-between; gap: 12px; margin: 8px 0;">
+        <span>Subtotal setelah diskon produk</span>
+        <strong>${formatRupiah(totals.subtotal)}</strong>
+      </div>
 
-              <button type="button"
-                aria-label="Tambah jumlah"
-                onclick="changeCartQuantity(${product.id}, 1)">
-                +
-              </button>
+      ${totals.productDiscount > 0 ? `
+        <div style="display: flex; justify-content: space-between; gap: 12px; margin: 8px 0; color: #218838;">
+          <span>Diskon voucher HEMAT10</span>
+          <strong>−${formatRupiah(totals.productDiscount)}</strong>
+        </div>
+      ` : ""}
 
-              <button type="button" class="remove-item"
-                onclick="removeFromCart(${product.id})">
-                Hapus
-              </button>
-            </div>
-          </div>
-        `;
-      }).join("")}
+      <div style="display: flex; justify-content: space-between; gap: 12px; margin: 8px 0;">
+        <span>Ongkos kirim</span>
+        <strong>${formatRupiah(totals.shipping)}</strong>
+      </div>
+
+      ${totals.shippingDiscount > 0 ? `
+        <div style="display: flex; justify-content: space-between; gap: 12px; margin: 8px 0; color: #218838;">
+          <span>Potongan ongkir</span>
+          <strong>−${formatRupiah(totals.shippingDiscount)}</strong>
+        </div>
+      ` : ""}
+
+      <hr style="border: 0; border-top: 1px solid #ddd; margin: 12px 0;">
+
+      <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 18px;">
+        <strong>Total Pembayaran</strong>
+        <strong>${formatRupiah(totals.total)}</strong>
+      </div>
     </div>
   `;
 }
@@ -404,30 +685,47 @@ function checkout() {
     return;
   }
 
+  // Pastikan seluruh barang masih tersedia.
+  for (const item of cart) {
+    const product = getProduct(item.id);
+
+    if (!product || item.quantity > product.stock) {
+      showMessage("Ada produk yang stoknya tidak mencukupi.");
+      return;
+    }
+  }
+
+  const totals = getOrderTotals();
+
   const summary = cart.map(item => {
     const product = getProduct(item.id);
+    if (!product) return "";
 
-    return product
-      ? `- ${product.name} (${item.quantity} × ${formatRupiah(product.price)})`
-      : "";
+    const price = getDiscountedPrice(product);
+
+    return `- ${product.name} (${item.quantity} × ${formatRupiah(price)})`;
   }).filter(Boolean).join("\n");
 
-  const total = cart.reduce((sum, item) => {
-    const product = getProduct(item.id);
-    return sum + (product ? product.price * item.quantity : 0);
-  }, 0);
+  const voucherSummary = appliedVoucher
+    ? `Voucher: ${appliedVoucher}\n`
+    : "";
 
   const confirmed = window.confirm(
     `RINGKASAN PESANAN SEMBAKOKU\n\n` +
     `${summary}\n\n` +
-    `Total: ${formatRupiah(total)}\n\n` +
+    `${voucherSummary}` +
+    `Subtotal: ${formatRupiah(totals.subtotal)}\n` +
+    `Diskon voucher: ${formatRupiah(totals.productDiscount)}\n` +
+    `Ongkos kirim: ${formatRupiah(totals.shipping)}\n` +
+    `Potongan ongkir: ${formatRupiah(totals.shippingDiscount)}\n\n` +
+    `TOTAL: ${formatRupiah(totals.total)}\n\n` +
     `Lanjutkan checkout simulasi?`
   );
 
   if (!confirmed) return;
 
-  // Checkout ini hanya simulasi di browser.
-  // Transaksi nyata memerlukan backend dan database.
+  // Checkout hanya simulasi browser.
+  // Stok dan transaksi nyata harus dikelola oleh backend/database.
   cart.forEach(item => {
     const product = getProduct(item.id);
 
@@ -437,6 +735,9 @@ function checkout() {
   });
 
   cart = [];
+  appliedVoucher = null;
+  voucherInputValue = "";
+
   renderCart();
   renderProducts();
 
